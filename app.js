@@ -9,6 +9,17 @@ var reviewRouter = require('./routes/review');
 
 var app = express();
 
+// Importa la connessione al database
+const dbPromise = require('./database/db');
+
+// Associa il database a `app.locals` una volta che la connessione è stabilita
+dbPromise.then((db) => {
+    app.locals.db = db; // Rende il database accessibile tramite app.locals
+}).catch((error) => {
+    console.error('Failed to connect to the database:', error);
+    process.exit(1); // Esce se la connessione fallisce
+});
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

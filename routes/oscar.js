@@ -7,20 +7,23 @@ var router = express.Router();
  * @function
  * @param {string} path - Endpoint of the route ("/").
  * @param {callback} middleware - Async function to handle the request and response.
+ * @returns {Object} - Overview of the API, including total entries, categories, and winners.
  * @throws {Error} - Returns a 500 status if an error occurs.
  */
 router.get('/', async function (req, res, next) {
     try {
+        const db = req.app.locals.db;
+
         // Count total Oscar entries
-        const totalEntries = await db.collection('oscar').countDocuments();
+        const totalEntries = await db.collection('Oscars').countDocuments();
 
         // Count distinct categories
-        const distinctCategories = await db.collection('oscar').distinct('oscar.category');
+        const distinctCategories = await db.collection('Oscars').distinct('oscars.category');
 
         // Count total winners
-        const totalWinners = await db.collection('oscar').aggregate([
-            { $unwind: '$oscar' },
-            { $match: { 'oscar.winner': true } },
+        const totalWinners = await db.collection('Oscars').aggregate([
+            { $unwind: '$oscars' },
+            { $match: { 'oscars.winner': true } },
             { $count: 'totalWinners' }
         ]).toArray();
 
@@ -35,8 +38,7 @@ router.get('/', async function (req, res, next) {
                 { method: "GET", route: "/year_film/:year", description: "Fetch Oscars by year of the film" },
                 { method: "GET", route: "/winner/:status", description: "Fetch Oscars by winner status" },
                 { method: "GET", route: "/top/:limit", description: "Fetch top films by most Oscar wins" },
-                { method: "GET", route: "/categories", description: "Fetch all distinct Oscar categories" },
-                { method: "GET", route: "/search", description: "Perform advanced search with filters" }
+                { method: "GET", route: "/categories", description: "Fetch all distinct Oscar categories" }
             ]
         });
     } catch (error) {
@@ -47,15 +49,16 @@ router.get('/', async function (req, res, next) {
 
 /**
  * Route to fetch all Oscars.
- * @name GET/
+ * @name GET/all
  * @function
- * @param {string} path - Endpoint of the route ("/").
- * @param {callback} middleware - Async function to handle the request and response.
+ * @param {string} path - Endpoint of the route ("/all").
+ * @returns {Array} - An array of all Oscars in the database.
  * @throws {Error} - Returns a 500 status if an error occurs.
  */
-router.get('/', async function (req, res, next) {
+router.get('/all', async function (req, res, next) {
     try {
-        const allOscars = await db.collection('oscar').find().toArray();
+        const db = req.app.locals.db;
+        const allOscars = await db.collection('Oscars').find().toArray();
         res.json(allOscars);
     } catch (error) {
         console.error('Error while fetching all Oscars:', error);
@@ -68,17 +71,22 @@ router.get('/', async function (req, res, next) {
  * @name GET/film/:title
  * @function
  * @param {string} path - Endpoint of the route ("/film/:title").
- * @param {callback} middleware - Async function to handle the request and response.
+ * @param {string} title - The title of the film to search for (case-insensitive).
+ * @returns {Array} - An array of Oscars for the specified film.
  * @throws {Error} - Returns a 500 status if an error occurs.
  */
 router.get('/film/:title', async function (req, res, next) {
     try {
-        const { title } = req.params;
+        const db = req.app.locals.db; // Accedi al database tramite app.locals
+        const { title } = req.params; // Estrarre il parametro del titolo dal percorso
+
+        // Cerca il titolo del film usando il campo "movie_title"
         const oscarsByFilm = await db
-            .collection('oscar')
-            .find({ 'oscar.film': new RegExp(title, 'i') })
+            .collection('Oscars') // Nome corretto della collezione
+            .find({ movie_title: new RegExp(title, 'i') }) // Ricerca case-insensitive
             .toArray();
-        res.json(oscarsByFilm);
+
+        res.json(oscarsByFilm); // Restituisce i risultati trovati
     } catch (error) {
         console.error('Error while fetching Oscars by film title:', error);
         res.status(500).json({ error: 'Error while fetching Oscars by film title.' });
@@ -90,15 +98,18 @@ router.get('/film/:title', async function (req, res, next) {
  * @name GET/category/:category
  * @function
  * @param {string} path - Endpoint of the route ("/category/:category").
- * @param {callback} middleware - Async function to handle the request and response.
+ * @param {string} category - The category to search for (case-insensitive).
+ * @returns {Array} - An array of Oscars in the specified category.
  * @throws {Error} - Returns a 500 status if an error occurs.
  */
 router.get('/category/:category', async function (req, res, next) {
     try {
+        const db = req.app.locals.db;
         const { category } = req.params;
+
         const oscarsByCategory = await db
-            .collection('oscar')
-            .find({ 'oscar.category': new RegExp(category, 'i') })
+            .collection('Oscars')
+            .find({ 'oscars.category': new RegExp(category, 'i') })
             .toArray();
         res.json(oscarsByCategory);
     } catch (error) {
@@ -107,5 +118,103 @@ router.get('/category/:category', async function (req, res, next) {
     }
 });
 
+
+/**
+ * Route to fetch Oscars by year of the film.
+ * @name GET/year_film/:year
+ * @function
+ * @param {string} path - Endpoint of the route ("/year_film/:year").
+ * @param {number} year - The year of the film to search for.
+ * @returns {Array} - An array of Oscars for films released in the specified year.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
+router.get('/year_film/:year', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db;
+        const { year } = req.params;
+
+        const oscarsByYear = await db
+            .collection('Oscars')
+            .find({ 'oscars.year_film': parseInt(year) })
+            .toArray();
+        res.json(oscarsByYear);
+    } catch (error) {
+        console.error('Error while fetching Oscars by year of the film:', error);
+        res.status(500).json({ error: 'Error while fetching Oscars by year of the film.' });
+    }
+});
+
+/**
+ * Route to fetch Oscars by winner status.
+ * @name GET/winner/:status
+ * @function
+ * @param {string} path - Endpoint of the route ("/winner/:status").
+ * @param {boolean} status - The winner status to search for (`true` or `false`).
+ * @returns {Array} - An array of Oscars matching the winner status.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
+router.get('/winner/:status', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db;
+        const { status } = req.params;
+
+        const winnerStatus = status === 'true';
+        const oscarsByWinner = await db
+            .collection('Oscars')
+            .find({ 'oscars.winner': winnerStatus })
+            .toArray();
+        res.json(oscarsByWinner);
+    } catch (error) {
+        console.error('Error while fetching Oscars by winner status:', error);
+        res.status(500).json({ error: 'Error while fetching Oscars by winner status.' });
+    }
+});
+
+/**
+ * Route to fetch top films with the most nominations.
+ * @name GET/top/:limit
+ * @function
+ * @param {string} path - Endpoint of the route ("/top/:limit").
+ * @param {number} limit - The number of top films to fetch.
+ * @returns {Array} - An array of top films with the most Oscar wins.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
+router.get('/top/:limit', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db;
+        const { limit } = req.params;
+
+        const topFilms = await db
+            .collection('Oscars')
+            .aggregate([
+                { $unwind: '$oscars' },
+                { $match: { 'oscars.winner': true } },
+                {
+                    $group: {
+                        _id: '$movie_title',
+                        totalWins: { $sum: 1 }
+                    }
+                },
+                { $sort: { totalWins: -1 } },
+                { $limit: parseInt(limit, 10) }
+            ])
+            .toArray();
+        res.json(topFilms);
+    } catch (error) {
+        console.error('Error while fetching top films:', error);
+        res.status(500).json({ error: 'Error while fetching top films.' });
+    }
+});
+
+router.get('/test', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db;
+        const testResults = await db.collection('Oscars').find().limit(10).toArray(); // Mostra i primi 10 documenti
+        res.json({ message: 'Database connection is working', samples: testResults });
+    } catch (error) {
+        console.error('Error during database connection test:', error);
+        res.status(500).json({ error: 'Database connection failed' });
+    }
+});
 
 module.exports = router;
