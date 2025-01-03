@@ -2,19 +2,48 @@ var express = require('express');
 var router = express.Router();
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-
-});
-
-//route per ottenere tutte le reviews da tutti film
-router.get('/reviews/all', async function(req, res, next) {
+router.get('/', async function (req, res, next) {
     try {
         const db = req.app.locals.db;
 
-        const allReviews = await db.collection('Reviews').aggregate([
+        // Conta il numero totale di recensioni
+        const totalReviews = await db.collection('Reviews').countDocuments();
+
+        // Conta il numero di critici distinti
+        const distinctCritics = await db.collection('Reviews').distinct('reviews.critic_name');
+
+        // Conta il numero totale di recensioni con critici top
+        const totalTopCriticReviews = await db.collection('Reviews').aggregate([
             { $unwind: '$reviews' },
-            { $replaceRoot: { newRoot: '$reviews' } }
+            { $match: { 'reviews.top_critic': true } },
+            { $count: 'totalTopCriticReviews' }
         ]).toArray();
+
+        res.json({
+            message: "Welcome to the Reviews API",
+            totalReviews,
+            totalCritics: distinctCritics.length,
+            totalTopCriticReviews: totalTopCriticReviews[0]?.totalTopCriticReviews || 0,
+            availableRoutes: [
+                { method: "GET", route: "/all", description: "Fetch all reviews" },
+                { method: "GET", route: "/film/:title", description: "Fetch reviews by film title" },
+                { method: "GET", route: "/publisher/:publisher", description: "Fetch reviews by publisher" },
+                { method: "GET", route: "/top_critic/:status", description: "Fetch reviews by top critic status (true/false)" }
+            ]
+        });
+    } catch (error) {
+        console.error('Error while generating API overview:', error);
+        res.status(500).json({ error: 'Error while generating API overview.' });
+    }
+});
+
+
+//route per ottenere tutte le reviews da tutti film
+router.get('/all', async function(req, res, next) {
+    try {
+        const db = req.app.locals.db;
+
+        const allReviews = await db.collection('Reviews').find().toArray();
 
         res.json(allReviews);
 
@@ -25,25 +54,26 @@ router.get('/reviews/all', async function(req, res, next) {
 });
 
 // cerca il titolo del film
-router.get('/reviews/film/:title', async function (req, res, next) {
+router.get('/film/:title', async function (req, res, next) {
     try {
-        const db = req.app.locals.db;
-        const { title } = req.params;
+        const db = req.app.locals.db; // Accedi al database tramite app.locals
+        const { title } = req.params; // Estrarre il parametro del titolo dal percorso
 
-        const reviewsByFilm = await db.collection('Reviews').findOne(
-            { movie_title: new RegExp(title, 'i') },
-            { projection: { reviews: 1, _id: 0 } }
-        );
+        // Cerca il titolo del film usando il campo "movie_title"
+        const reviewsByFilm = await db
+            .collection('Reviews') // Nome corretto della collezione
+            .find({ movie_title: new RegExp(title, 'i') }) // Ricerca case-insensitive
+            .toArray();
 
-        res.json(reviewsByFilm?.reviews || []);
+        res.json(reviewsByFilm); // Restituisce i risultati trovati
     } catch (error) {
-        console.error('Error while fetching reviews by film title:', error);
-        res.status(500).json({ error: 'Error while fetching reviews by film title.' });
+        console.error('Error while fetching Reviews by film title:', error);
+        res.status(500).json({ error: 'Error while fetching Oscars by film title.' });
     }
 });
 
 //route per trovare le reviews dal publisher
-router.get('/reviews/publisher/:publisher', async function (req, res, next) {
+router.get('/publisher/:publisher', async function (req, res, next) {
     try {
         const db = req.app.locals.db;
         const { publisher } = req.params;
@@ -62,7 +92,7 @@ router.get('/reviews/publisher/:publisher', async function (req, res, next) {
 });
 
 //per trovare le reviews top critic
-router.get('/reviews/top_critic/:status', async function (req, res, next) {
+router.get('/top_critic/:status', async function (req, res, next) {
     try {
         const db = req.app.locals.db;
         const { status } = req.params;
@@ -81,12 +111,6 @@ router.get('/reviews/top_critic/:status', async function (req, res, next) {
         res.status(500).json({ error: 'Error while fetching reviews by top critic.' });
     }
 });
-
-
-
-
-
-
 
 
 
