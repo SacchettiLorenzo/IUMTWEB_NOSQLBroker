@@ -26,7 +26,7 @@ router.get('/', async function (req, res, next) {
             totalTopCriticReviews: totalTopCriticReviews[0]?.totalTopCriticReviews || 0,
             availableRoutes: [
                 { method: "GET", route: "/all", description: "Fetch all reviews" },
-                { method: "GET", route: "/film/:title", description: "Fetch reviews by film title" },
+                { method: "GET", route: "/movie/:title", description: "Fetch reviews by film title" },
                 { method: "GET", route: "/publisher/:publisher", description: "Fetch reviews by publisher" },
                 { method: "GET", route: "/top_critic/:status", description: "Fetch reviews by top critic status (true/false)" }
             ]
@@ -54,18 +54,17 @@ router.get('/all', async function(req, res, next) {
 });
 
 // cerca il titolo del film
-router.get('/film/:title', async function (req, res, next) {
+router.get('/movie/:title', async function (req, res, next) {
     try {
         const db = req.app.locals.db; // Accedi al database tramite app.locals
         const { title } = req.params; // Estrarre il parametro del titolo dal percorso
 
-        // Cerca il titolo del film usando il campo "movie_title"
         const reviewsByFilm = await db
             .collection('Reviews') // Nome corretto della collezione
-            .find({ movie_title: new RegExp(title, 'i') }) // Ricerca case-insensitive
-            .toArray();
+            .findOne({ movie_title: title }) // Ricerca case-insensitive
 
-        res.json(reviewsByFilm); // Restituisce i risultati trovati
+        res.json(reviewsByFilm);
+        //res.json(reviewsByFilm); // Restituisce i risultati trovati
     } catch (error) {
         console.error('Error while fetching Reviews by film title:', error);
         res.status(500).json({ error: 'Error while fetching Oscars by film title.' });
