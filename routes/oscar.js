@@ -217,4 +217,43 @@ router.get('/test', async function (req, res, next) {
     }
 });
 
+
+
+/**
+ * Route to fetch films with the most nominations.
+ * @name GET/nominations/top/:limit
+ * @function
+ * @param {string} path - Endpoint of the route ("/nominations/top/:limit").
+ * @param {number} limit - The number of top films to fetch.
+ * @returns {Array} - An array of films with the most Oscar nominations.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
+router.get('/nominations/top/:limit', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db;
+        const { limit } = req.params;
+
+        const topNominatedFilms = await db
+            .collection('Oscars')
+            .aggregate([
+                { $unwind: '$oscars' }, // Separa ogni elemento dell'array per elaborarlo singolarmente
+                {
+                    $group: {
+                        _id: '$oscars.film', // Raggruppa per titolo del film
+                        totalNominations: { $sum: 1 } // Conta tutte le nomination (vincitrici e non)
+                    }
+                },
+                { $sort: { totalNominations: -1 } }, // Ordina per numero di nomination decrescente
+                { $limit: parseInt(limit, 10) } // Limita ai primi N film specificati dal parametro
+            ])
+            .toArray();
+
+        res.json(topNominatedFilms);
+    } catch (error) {
+        console.error('Error while fetching top nominated films:', error);
+        res.status(500).json({ error: 'Error while fetching top nominated films.' });
+    }
+});
+
+
 module.exports = router;
