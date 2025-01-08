@@ -111,8 +111,20 @@ router.get('/top_critic/:status', async function (req, res, next) {
     }
 });
 
+router.get('/last_review', async function (req, res, next) {
+    try{
+        const db = req.app.locals.db;
+        const { status } = req.params;
 
-
-
+        const last_review = await db.collection('Reviews').aggregate([
+            { $unwind: '$reviews' },
+            { $sort: {'reviews.review_date':-1} },
+        ]).limit(10).toArray();
+        res.json(last_review);
+    }catch(error){
+        console.error('Error while fetching reviews by last review:', error);
+        res.status(500).json({ error: 'Error while fetching latest review.' });
+    }
+})
 
 module.exports = router;
