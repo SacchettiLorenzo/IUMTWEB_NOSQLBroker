@@ -153,6 +153,7 @@ router.get('/critics/top-10', async function(req, res, next) {
     }
 });
 
+
 // Route per trovare i 10 film con più critici (distinti) che li hanno recensiti
 router.get('/movies/top-10-reviewed', async function(req, res, next) {
     try {
