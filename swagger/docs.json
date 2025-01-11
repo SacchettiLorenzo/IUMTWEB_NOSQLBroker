@@ -1,0 +1,14 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CineReviews - NoSQL Server",
+    "version": "1.0",
+    "description": "API documentation for the NoSQL server handling reviews and Oscars."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Local Server"
+    }
+  ]
+}
