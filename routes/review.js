@@ -1,6 +1,26 @@
 var express = require('express');
 var router = express.Router();
 
+
+// cerca il titolo del film
+router.get('/movie/:title', async function (req, res, next) {
+    try {
+        const db = req.app.locals.db; // Accedi al database tramite app.locals
+        const { title } = req.params; // Estrarre il parametro del titolo dal percorso
+
+        const reviewsByFilm = await db
+            .collection('Reviews') // Nome corretto della collezione
+            .findOne({ movie_title: title }) // Ricerca case-insensitive
+
+        res.json(reviewsByFilm);
+        //res.json(reviewsByFilm); // Restituisce i risultati trovati
+    } catch (error) {
+        console.error('Error while fetching Reviews by film title:', error);
+        res.status(500).json({ error: 'Error while fetching Oscars by film title.' });
+    }
+});
+
+
 /**
  * Route to fetch the latest 10 reviews.
  * @name GET/last_review
