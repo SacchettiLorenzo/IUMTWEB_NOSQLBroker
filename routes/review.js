@@ -1,7 +1,14 @@
 var express = require('express');
 var router = express.Router();
 
-
+/**
+ * Route to fetch the latest 10 reviews.
+ * @name GET/last_review
+ * @function
+ * @param {string} path - Endpoint of the route ("/last_review").
+ * @returns {Object[]} - An array of the latest 10 reviews sorted by descending date.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
 router.get('/last_review', async function (req, res, next) {
     try{
         const db = req.app.locals.db;
@@ -18,7 +25,14 @@ router.get('/last_review', async function (req, res, next) {
     }
 });
 
-// Route per trovare i top 10 critici più presenti
+/**
+ * Route to find the top 10 critics with the most reviews.
+ * @name GET/critics/top-10
+ * @function
+ * @param {string} path - Endpoint of the route ("/critics/top-10").
+ * @returns {Object[]} - An array of objects where each object includes a critic's name and totalReviews count.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
 router.get('/critics/top-10', async function(req, res, next) {
     try {
         const db = req.app.locals.db;
@@ -45,7 +59,14 @@ router.get('/critics/top-10', async function(req, res, next) {
 });
 
 
-// Route per trovare i 10 film con più critici (distinti) che li hanno recensiti
+/**
+ * Route to find the top 10 movies based on the largest number of distinct critics.
+ * @name GET/movies/top-10-reviewed
+ * @function
+ * @param {string} path - Endpoint of the route ("/movies/top-10-reviewed").
+ * @returns {Object[]} - An array of objects with fields 'movie_title' and 'criticsCount'.
+ * @throws {Error} - Returns a 500 status if an error occurs.
+ */
 router.get('/movies/top-10-reviewed', async function(req, res, next) {
     try {
         const db = req.app.locals.db;

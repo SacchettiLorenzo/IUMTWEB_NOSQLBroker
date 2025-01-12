@@ -19,7 +19,15 @@
         "operationId": "getLastReview",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LastReview" }
+                }
+              }
+            }
           }
         }
       }
@@ -31,7 +39,15 @@
         "operationId": "getTopCritics",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TopCritic" }
+                }
+              }
+            }
           }
         }
       }
@@ -43,7 +59,271 @@
         "operationId": "getTopReviewedMovies",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TopReviewedMovie" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar": {
+      "get": {
+        "summary": "Oscar API overview",
+        "description": "Provides a summary with total entries, categories, winners, and available routes.",
+        "operationId": "getOscarOverview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "totalEntries": { "type": "integer" },
+                    "totalCategories": { "type": "integer" },
+                    "totalWinners": { "type": "integer" },
+                    "availableRoutes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "method": { "type": "string" },
+                          "route": { "type": "string" },
+                          "description": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/all": {
+      "get": {
+        "summary": "Fetch all Oscars",
+        "description": "Returns an array of all Oscar documents in the database.",
+        "operationId": "getAllOscars",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OscarDoc" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/film/{title}": {
+      "get": {
+        "summary": "Fetch Oscars by film title",
+        "description": "Returns all Oscar documents matching a given film title (case-insensitive).",
+        "operationId": "getOscarsByFilm",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "path",
+            "required": true,
+            "description": "Title of the film (case-insensitive).",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OscarDoc" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/category/{category}": {
+      "get": {
+        "summary": "Fetch Oscars by category",
+        "description": "Returns all Oscar documents under a specified category (case-insensitive).",
+        "operationId": "getOscarsByCategory",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "description": "Oscar category (e.g. BEST PICTURE, SOUND RECORDING, etc.).",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OscarDoc" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/year_film/{year}": {
+      "get": {
+        "summary": "Fetch Oscars by year of the film",
+        "description": "Returns all Oscars for films released in the specified year.",
+        "operationId": "getOscarsByFilmYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "description": "Year the film was released.",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OscarDoc" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/winner/{status}": {
+      "get": {
+        "summary": "Fetch Oscars by winner status",
+        "description": "Returns all Oscar documents that are either winners or not, depending on the status.",
+        "operationId": "getOscarsByWinnerStatus",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "path",
+            "required": true,
+            "description": "Use 'true' or 'false' to indicate winner status.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OscarDoc" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/top/{limit}": {
+      "get": {
+        "summary": "Fetch top films by most Oscar wins",
+        "description": "Returns the top N films (defined by limit) sorted by the most Oscar wins.",
+        "operationId": "getTopFilms",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "description": "Number of top films to fetch.",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TopFilms" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/test": {
+      "get": {
+        "summary": "Test route for Oscars DB connectivity",
+        "description": "Returns a sample of 10 Oscar documents to verify database connection.",
+        "operationId": "testOscarsDB",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "samples": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OscarDoc" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oscar/nominations/top/{limit}": {
+      "get": {
+        "summary": "Fetch films with the most nominations",
+        "description": "Returns the top N films by total Oscar nominations, whether they won or not.",
+        "operationId": "getTopNominations",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "description": "Number of top nominated films to fetch.",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TopNominatedFilm" }
+                }
+              }
+            }
           }
         }
       }
@@ -126,6 +406,82 @@
           "criticsCount": {
             "type": "integer",
             "description": "Number of distinct critics who reviewed the movie."
+          }
+        }
+      },
+      "OscarDoc": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique document Id (ObjectId in MongoDB)."
+          },
+          "movie_title": {
+            "type": "string",
+            "description": "Movie title."
+          },
+          "oscars": {
+            "type": "array",
+            "description": "Array of Oscar details for this movie.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "year_film": {
+                  "type": "integer",
+                  "description": "Year the film was released."
+                },
+                "year_ceremony": {
+                  "type": "integer",
+                  "description": "Year the Oscar ceremony took place."
+                },
+                "ceremony": {
+                  "type": "integer",
+                  "description": "Numeric identifier for the ceremony (e.g., 95 for the 95th Oscars)."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "Name of the Oscar category (e.g., 'BEST PICTURE')."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the person, studio, or country nominated."
+                },
+                "film": {
+                  "type": "string",
+                  "description": "Title of the film as recognized by the Academy."
+                },
+                "winner": {
+                  "type": "boolean",
+                  "description": "True if won the Oscar, false otherwise."
+                }
+              }
+            }
+          }
+        }
+      },
+      "TopFilms": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Movie title that won at least one Oscar."
+          },
+          "totalWins": {
+            "type": "integer",
+            "description": "Number of Oscars won by this film."
+          }
+        }
+      },
+      "TopNominatedFilm": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Film title as recognized in Oscar records."
+          },
+          "totalNominations": {
+            "type": "integer",
+            "description": "Total number of nominations (wins or not)."
           }
         }
       }
