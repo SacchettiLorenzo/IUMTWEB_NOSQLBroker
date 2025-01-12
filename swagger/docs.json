@@ -11,5 +11,124 @@
       "description": "Local Server"
     }
   ],
-
+  "paths": {
+    "/review/last_review": {
+      "get": {
+        "summary": "Latest 10 reviews",
+        "description": "Retrieves the latest 10 inserted reviews, sorted by descending date.",
+        "operationId": "getLastReview",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/review/critics/top-10": {
+      "get": {
+        "summary": "Top 10 critics",
+        "description": "Returns the 10 critics with the largest number of reviews.",
+        "operationId": "getTopCritics",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/review/movies/top-10-reviewed": {
+      "get": {
+        "summary": "Top 10 most reviewed movies",
+        "description": "Returns the 10 movies with the highest number of distinct critics.",
+        "operationId": "getTopReviewedMovies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LastReview": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique document Id (ObjectId in MongoDB)."
+          },
+          "movie_title": {
+            "type": "string",
+            "description": "Title of the movie to which the review belongs."
+          },
+          "rotten_tomatoes_link": {
+            "type": "string",
+            "description": "Link to the movie on RottenTomatoes, if available."
+          },
+          "reviews": {
+            "type": "object",
+            "description": "Detailed information of the single review (after 'unwind').",
+            "properties": {
+              "critic_name": {
+                "type": "string",
+                "description": "Name of the critic."
+              },
+              "top_critic": {
+                "type": "boolean",
+                "description": "Indicates whether the critic is a 'top critic' (true) or not (false)."
+              },
+              "publisher_name": {
+                "type": "string",
+                "description": "Name of the newspaper/periodical or publisher."
+              },
+              "review_type": {
+                "type": "string",
+                "description": "Type of review, for example 'Fresh' or 'Rotten'."
+              },
+              "review_score": {
+                "type": "string",
+                "description": "Review score, typically 'x/5' or 'x/10'."
+              },
+              "review_date": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Review date in ISO 8601 format."
+              },
+              "review_content": {
+                "type": "string",
+                "description": "Full text of the review."
+              }
+            }
+          }
+        }
+      },
+      "TopCritic": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "The name of the critic, resulting from the Mongo group operation."
+          },
+          "totalReviews": {
+            "type": "integer",
+            "description": "Total number of reviews published by the critic."
+          }
+        }
+      },
+      "TopReviewedMovie": {
+        "type": "object",
+        "properties": {
+          "movie_title": {
+            "type": "string",
+            "description": "Title of the movie with the highest number of distinct critics."
+          },
+          "criticsCount": {
+            "type": "integer",
+            "description": "Number of distinct critics who reviewed the movie."
+          }
+        }
+      }
+    }
+  }
 }
