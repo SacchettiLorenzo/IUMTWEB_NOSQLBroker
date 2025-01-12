@@ -52,6 +52,102 @@
         }
       }
     },
+    "/review/movie/{title}": {
+      "get": {
+        "summary": "Fetch reviews for a specific movie",
+        "description": "Retrieves a single document containing the movie title, Rotten Tomatoes link, and an array of reviews.",
+        "operationId": "getReviewsByMovieTitle",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "path",
+            "required": true,
+            "description": "Title of the movie for which reviews need to be fetched.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A movie's reviews retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "description": "Unique document Id (ObjectId in MongoDB)."
+                    },
+                    "movie_title": {
+                      "type": "string",
+                      "description": "The title of the movie."
+                    },
+                    "rotten_tomatoes_link": {
+                      "type": "string",
+                      "description": "Link to the movie's Rotten Tomatoes page."
+                    },
+                    "reviews": {
+                      "type": "array",
+                      "description": "Array of reviews for the movie.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "critic_name": {
+                            "type": "string",
+                            "description": "Name of the critic."
+                          },
+                          "top_critic": {
+                            "type": "boolean",
+                            "description": "Indicates whether the critic is a top critic."
+                          },
+                          "publisher_name": {
+                            "type": "string",
+                            "description": "Name of the publication or publisher."
+                          },
+                          "review_type": {
+                            "type": "string",
+                            "description": "Type of review (e.g., Fresh or Rotten)."
+                          },
+                          "review_score": {
+                            "type": "string",
+                            "description": "The score of the review (e.g., 4/4 or 8/10)."
+                          },
+                          "review_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Date when the review was published."
+                          },
+                          "review_content": {
+                            "type": "string",
+                            "description": "The content of the review."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Movie not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message indicating the movie was not found."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/review/movies/top-10-reviewed": {
       "get": {
         "summary": "Top 10 most reviewed movies",

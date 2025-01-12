@@ -1,19 +1,25 @@
 var express = require('express');
 var router = express.Router();
 
-
-// cerca il titolo del film
+/**
+ * Route to fetch reviews for a specific movie by title.
+ * @name GET/movie/:title
+ * @function
+ * @param {string} path - Endpoint of the route ("/movie/:title").
+ * @param {string} title - Title of the movie to search for.
+ * @returns {Object} - A single document containing the movie title, Rotten Tomatoes link, and an array of reviews.
+ * @throws {Error} - Returns a 500 status if an error occurs or no movie matches the title.
+ */
 router.get('/movie/:title', async function (req, res, next) {
     try {
-        const db = req.app.locals.db; // Accedi al database tramite app.locals
-        const { title } = req.params; // Estrarre il parametro del titolo dal percorso
+        const db = req.app.locals.db;
+        const { title } = req.params;
 
         const reviewsByFilm = await db
-            .collection('Reviews') // Nome corretto della collezione
-            .findOne({ movie_title: title }) // Ricerca case-insensitive
+            .collection('Reviews')
+            .findOne({ movie_title: title })
 
         res.json(reviewsByFilm);
-        //res.json(reviewsByFilm); // Restituisce i risultati trovati
     } catch (error) {
         console.error('Error while fetching Reviews by film title:', error);
         res.status(500).json({ error: 'Error while fetching Oscars by film title.' });
@@ -53,19 +59,25 @@ router.get('/last_review', async function (req, res, next) {
  * @returns {Object[]} - An array of objects where each object includes a critic's name and totalReviews count.
  * @throws {Error} - Returns a 500 status if an error occurs.
  */
-router.get('/critics/top-10', async function(req, res, next) {
+router.get('/critics/top-10', async function (req, res, next) {
     try {
         const db = req.app.locals.db;
 
         const pipeline = [
             { $unwind: '$reviews' },
             {
+                $match: {
+                    'reviews.critic_name': { $exists: true, $ne: null, $ne: '' }
+                }
+            },
+            {
                 $group: {
-                    _id: '$reviews.critic_name',
-                    totalReviews: { $sum: 1 }
+                    _id: '$reviews.critic_name', // Group by critic_name
+                    totalReviews: { $sum: 1 } // Count the total reviews
                 }
             },
             { $sort: { totalReviews: -1 } },
+            { $skip: 1 },
             { $limit: 10 }
         ];
 
